@@ -13,6 +13,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MetaOption } from 'src/meta-options/meta-option.entity';
 import { User } from 'src/users/user.entity';
 import { waitForDebugger } from 'inspector';
+import { GetPostsDto } from '../dto/get-posts.dto';
+import { PaginationProvider } from 'src/common/pagination/providers/pagination.provider';
+import { Paginated } from 'src/common/pagination/interfaces/paginated.interface';
+import { CreatePostProvider } from './create-post.provider';
+import { ActiveUserData } from 'src/auth/interfaces/active-user-data.interface';
 
 @Injectable()
 export class PostsService {
@@ -32,38 +37,39 @@ export class PostsService {
      * Injecting Tags service
      */
     private readonly tagsService: TagsService,
+
+    /**
+     * Injecting paginationProvider
+     */
+    private readonly paginationProvider: PaginationProvider,
+
+    /**
+     * Inject createPostProvider
+     */
+    private readonly createPostProvider: CreatePostProvider,
   ) {}
 
   /**
    * Method to create a new post
    */
-  public async create(createPostDto: CreatePostDto) {
-    let author = await this.usersService.findOneById(createPostDto.authorId);
-
-    let tags = await this.tagsService.findMultipleTags(createPostDto.tags);
-
-    // Create the post
-    let post = this.postsRepository.create({
-      ...createPostDto,
-      author: author,
-      tags: tags,
-    });
-
-    return await this.postsRepository.save(post);
+  public async create(createPostDto: CreatePostDto, user: ActiveUserData) {
+    return await this.createPostProvider.create(createPostDto, user);
   }
 
   /**
    * Method to find all posts
    */
-  public async findAll(userId: string) {
-    // find all posts
-    let posts = await this.postsRepository.find({
-      relations: {
-        metaOptions: true,
-        author: true,
-        // tags: true,
+  public async findAll(
+    postQuery: GetPostsDto,
+    userId: string,
+  ): Promise<Paginated<Post>> {
+    let posts = await this.paginationProvider.paginateQuery(
+      {
+        limit: postQuery.limit,
+        page: postQuery.page,
       },
-    });
+      this.postsRepository,
+    );
 
     return posts;
   }
