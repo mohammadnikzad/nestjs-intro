@@ -1,1 +1,2 @@
-GET http://localhost:3000/users/1?limit=10&offset=20
+GET http://localhost:3000/users/1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjIsImVtYWlsIjoibmlremFkQGdtYWlsLmNvbSIsImlhdCI6MTczMDIzOTAxMSwiZXhwIjoxNzMwMjQyNjExLCJhdWQiOiJsb2NhbGhvc3Q6MzAwMCIsImlzcyI6ImxvY2FsaG9zdDozMDAwIn0.Q4vq2sk-Yrt4c_MzD1fyn6o8S48oe7fTmQgndcVID0E
