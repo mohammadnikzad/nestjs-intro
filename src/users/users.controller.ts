@@ -65,7 +65,7 @@ export class UsersController {
 
   @Post()
   // @SetMetadata('authType', 'none')
-  @Auth(AuthType.Bearer)
+  @Auth(AuthType.None)
   // @UseInterceptors(ClassSerializerInterceptor)
   public createUsers(@Body(new ValidationPipe()) createUserDto: CreateUserDto) {
     return this.usersService.createUser(createUserDto);
