@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { DynamicModule, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
@@ -21,6 +21,7 @@ import { AuthenticationGuard } from './auth/guards/authentication/authentication
 import { DataResponseInterceptor } from './common/interceptors/data-response/data-response.interceptor';
 import { UploadsModule } from './uploads/uploads.module';
 import { MailModule } from './mail/mail.module';
+import { MongooseModule } from '@nestjs/mongoose';
 
 const ENV = process.env.NODE_ENV;
 
@@ -72,4 +73,31 @@ const ENV = process.env.NODE_ENV;
     AccessTokenGuard,
   ],
 })
-export class AppModule {}
+export class AppModule {
+  static getDatabaseModule(): DynamicModule {
+    const databaseType = process.env.DATABASE_TYPE;
+
+    if (databaseType === 'mongodb') {
+      return MongooseModule.forRoot(
+        process.env.MONGODB_URI || 'mongodb://localhost:27017/nest-blog',
+      );
+    } else if (databaseType === 'postgres') {
+      return TypeOrmModule.forRootAsync({
+        imports: [ConfigModule],
+        inject: [ConfigService],
+        useFactory: async (configService: ConfigService) => ({
+          type: 'postgres',
+          host: configService.get<string>('DATABASE_HOST'),
+          port: configService.get<number>('DATABASE_PORT', 5432),
+          username: configService.get<string>('DATABASE_USER'),
+          password: configService.get<string>('DATABASE_PASSWORD'),
+          database: configService.get<string>('DATABASE_NAME'),
+          autoLoadEntities: true,
+          synchronize: configService.get<boolean>('DATABASE_SYNCHRONIZE', true),
+        }),
+      });
+    } else {
+      throw new Error('Unsupported database type');
+    }
+  }
+}
